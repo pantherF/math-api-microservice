@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS calculations (
+    id SERIAL PRIMARY KEY,
+    operation TEXT NOT NULL,
+    result DOUBLE PRECISION NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);

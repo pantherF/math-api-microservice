@@ -1,0 +1,64 @@
+version: '4'
+
+services:
+  gateway:
+    container_name: calculator-gateway
+    build:
+      context: ./calc-gateway
+    ports:
+      - "8000:8000"
+    depends_on:
+      - add
+      - subtract
+      - multiply
+      - divide
+      - history
+    restart: unless-stopped
+
+  add:
+    container_name: calculator-add
+    build:
+      context: ./calc-add
+    restart: unless-stopped
+
+  subtract:
+    container_name: calculator-subtract
+    build:
+      context: ./calc-subtract
+    restart: unless-stopped
+
+  multiply:
+    container_name: calculator-multiply
+    build:
+      context: ./calc-multiply
+    restart: unless-stopped
+
+  divide:
+    container_name: calculator-divide
+    build:
+      context: ./calc-divide
+    restart: unless-stopped
+
+  history:
+    container_name: calculator-history
+    build:
+      context: ./calc-history
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/calculator
+    restart: unless-stopped
+
+  db:
+    container_name: calculator-db
+    image: postgres:15
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=calculator
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  db-data:
