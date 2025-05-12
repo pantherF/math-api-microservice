@@ -2,7 +2,7 @@ use actix_web::{web, App, HttpServer, Responder, HttpResponse, Error};
 use serde::{Deserialize, Serialize};
 use awc::Client;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]  // Added Serialize here
 struct Numbers {
     a: f64,
     b: f64,
@@ -22,7 +22,7 @@ struct ErrorResponse {
 async fn forward_to_service(numbers: web::Json<Numbers>, url: &str) -> Result<HttpResponse, Error> {
     let client = Client::default();
     
-    let response = client
+    let mut response = client
         .post(url)
         .send_json(&numbers)
         .await
@@ -79,7 +79,7 @@ async fn divide(numbers: web::Json<Numbers>) -> Result<HttpResponse, Error> {
 async fn get_history() -> Result<HttpResponse, Error> {
     let client = Client::default();
     
-    let response = client
+    let mut response = client  // Added 'mut' here
         .get("http://history:8005/history")
         .send()
         .await

@@ -1,7 +1,8 @@
 use actix_web::{web, App, HttpServer, Responder, HttpResponse};
 use serde::{Deserialize, Serialize};
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
+use sqlx::{Row, postgres::PgPoolOptions, Pool, Postgres};
 use std::env;
+
 
 type DbPool = Pool<Postgres>;
 
@@ -34,20 +35,23 @@ async fn record_calculation(
 }
 
 async fn get_history(db_pool: web::Data<DbPool>) -> impl Responder {
-    match sqlx::query_as!(
-        CalculationResult,
-        "SELECT operation, result FROM calculations ORDER BY created_at DESC LIMIT 100"
-    )
-    .fetch_all(db_pool.get_ref())
-    .await {
-        Ok(calculations) => {
-            HttpResponse::Ok().json(calculations)
-        },
-        Err(e) => {
-            println!("Failed to retrieve calculations: {}", e);
-            HttpResponse::InternalServerError().body("Failed to retrieve calculation history")
+    match sqlx::query("SELECT operation, result FROM calculations ORDER BY created_at DESC LIMIT 100")
+        .map(|row: sqlx::postgres::PgRow| {
+            CalculationResult {
+                operation: row.get("operation"),
+                result: row.get("result"),
+            }
+        })
+        .fetch_all(db_pool.get_ref())
+        .await {
+            Ok(calculations) => {
+                HttpResponse::Ok().json(calculations)
+            },
+            Err(e) => {
+                println!("Failed to retrieve calculations: {}", e);
+                HttpResponse::InternalServerError().body("Failed to retrieve calculation history")
+            }
         }
-    }
 }
 
 async fn health_check() -> impl Responder {
